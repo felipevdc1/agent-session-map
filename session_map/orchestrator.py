@@ -1,6 +1,6 @@
 """The orchestrator extension point.
 
-An orchestrator (a tool that opens Claude sessions in its own terminal tabs)
+An orchestrator (a tool that opens agent sessions in its own terminal tabs)
 plugs into the map through an adapter: an object with a ``name``, an optional
 environment variable that carries its terminal handle, and two methods,
 ``steps`` and ``focus``. Adapters are listed in ``SESSION_MAP_ADAPTERS`` as

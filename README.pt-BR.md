@@ -7,42 +7,45 @@
     <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/pt-BR/hero-narrow-dark.svg" />
     <source media="(max-width: 600px)" srcset="assets/pt-BR/hero-narrow-light.svg" />
     <source media="(prefers-color-scheme: dark)" srcset="assets/pt-BR/hero-dark.svg" />
-    <img src="assets/pt-BR/hero-light.svg" alt="Um mapa animado de sessões do Claude Code desenhadas como cartões: duas sessões trabalhando, com uma luz girando em volta da moldura, uma delas ficando amarela para esperar um pedido de permissão, um ajudante ficando verde quando termina, uma sessão parada em cinza, uma próxima etapa tracejada e uma sessão encerrada sumindo, ligadas por linhas tracejadas. Os nomes são inventados." width="100%" />
+    <img src="assets/pt-BR/hero-light.svg" alt="Um mapa animado de sete sessões do Claude Code e uma do Codex desenhadas como cartões: sessões trabalhando, com uma luz girando em volta da moldura, o cartão do Codex, com a etiqueta Codex, ficando amarelo com uma marca de inferido quando um comando espera sua permissão, um ajudante ficando verde quando termina, uma sessão parada em cinza, uma próxima etapa tracejada e uma sessão encerrada sumindo, ligadas por linhas tracejadas. Os nomes são inventados." width="100%" />
   </picture>
 </p>
 
-<h1 align="center">claude-session-map</h1>
+<h1 align="center">agent-session-map</h1>
 
-<p align="center"><strong>Veja ao vivo todas as sessões do Claude Code na sua máquina.</strong></p>
+<p align="center"><strong>Veja ao vivo todas as sessões de IA de programação na sua máquina: Claude Code e Codex.</strong></p>
 
-<p align="center">Um mapa ao vivo das sessões do Claude Code de uma máquina, desenhadas como cartões numa página do navegador.
+<p align="center"><sub>Antes se chamava claude-session-map; o endereço antigo redireciona para cá.</sub></p>
+
+<p align="center">Um mapa ao vivo das sessões de agentes de IA de programação de uma máquina, Claude Code e Codex lado a lado, desenhadas como cartões numa página do navegador.
 Tudo é lido do disco e de comandos locais; nenhum modelo entra no processo, e nada sai da máquina.</p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-3fd68a?labelColor=141416" alt="Licença MIT" /></a>
-  <img src="https://img.shields.io/badge/Claude%20Code-session%20map-8cc8ff?labelColor=141416" alt="Feito para o Claude Code" />
+  <img src="https://img.shields.io/badge/Claude%20Code-supported-8cc8ff?labelColor=141416" alt="Funciona com o Claude Code" />
+  <img src="https://img.shields.io/badge/Codex-supported-c6c8cf?labelColor=141416" alt="Funciona com o Codex" />
   <img src="https://img.shields.io/badge/macOS-tested-4c4e55?labelColor=141416" alt="Testado no macOS" />
   <img src="https://img.shields.io/badge/Python-3.9%2B-f2c84b?labelColor=141416" alt="Python 3.9 ou mais novo, só biblioteca padrão" />
   <img src="https://img.shields.io/badge/Tern-optional-7a1c3e?labelColor=141416" alt="Tern opcional" />
 </p>
 
-<p align="center"><a href="#instalar"><strong>Instalar</strong></a> · <a href="#como-funciona">Como funciona</a> · <a href="#comandos">Comandos</a> · <a href="#regra-das-cores">A regra das cores</a> · <a href="#snapshot">Snapshot</a> · <a href="#orquestradores">Orquestradores</a> · <a href="#orca">Orca</a> · <a href="#requisitos">Requisitos</a></p>
+<p align="center"><a href="#instalar"><strong>Instalar</strong></a> · <a href="#como-funciona">Como funciona</a> · <a href="#comandos">Comandos</a> · <a href="#regra-das-cores">A regra das cores</a> · <a href="#snapshot">Snapshot</a> · <a href="#orquestradores">Orquestradores</a> · <a href="#orca">Orca</a> · <a href="#fontes">Adicionando outro agente</a> · <a href="#requisitos">Requisitos</a></p>
 
 <a id="instalar"></a>
 
 ## Instalar
 
-Abra o **Claude Code** em qualquer pasta e cole este pedido.
+Abra o **Claude Code** ou o **Codex** em qualquer pasta e cole este pedido.
 Ele clona este repositório, confere o seu Python e abre o mapa.
 
 ```text
-Instale o claude-session-map de https://github.com/felipevdc1/claude-session-map. Clone numa pasta que eu escolher (me pergunte qual), confira se o python3 é 3.9 ou mais novo e depois rode python3 -m session_map open a partir do clone. Me diga em que endereço o mapa abriu (http://127.0.0.1:9131/, a menos que SESSION_MAP_PORT esteja definida) e que rodar o mesmo comando de novo o reabre.
+Instale o agent-session-map de https://github.com/felipevdc1/agent-session-map. Clone numa pasta que eu escolher (me pergunte qual), confira se o python3 é 3.9 ou mais novo e depois rode python3 -m session_map open a partir do clone. Me diga em que endereço o mapa abriu (http://127.0.0.1:9131/, a menos que SESSION_MAP_PORT esteja definida) e que rodar o mesmo comando de novo o reabre.
 ```
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/pt-BR/install-dark.svg" />
-    <img src="assets/pt-BR/install-light.svg" alt="No Claude Code: você cola o pedido de instalação, o repositório é clonado, o python3 é conferido, python3 -m session_map open roda e o mapa abre no navegador padrão em http://127.0.0.1:9131/." width="100%" />
+    <img src="assets/pt-BR/install-light.svg" alt="No Claude Code ou no Codex: você cola o pedido de instalação, o repositório é clonado, o python3 é conferido, python3 -m session_map open roda e o mapa abre no navegador padrão em http://127.0.0.1:9131/." width="100%" />
   </picture>
 </p>
 
@@ -71,8 +74,9 @@ session-map open
 
 ## O que é
 
-Um mapa ao vivo das sessões do Claude Code de uma máquina, desenhadas como cartões numa página do navegador.
+Um mapa ao vivo das sessões de agentes de IA de programação de uma máquina, Claude Code e Codex lado a lado, desenhadas como cartões numa página do navegador.
 Cada sessão viva é um cartão: abas do Tern, abas que um orquestrador abriu, sessões em segundo plano e sessões em qualquer outro terminal.
+As sessões do Codex também viram cartões: um `codex` no terminal (num painel do Tern ou em qualquer outro terminal) e as conversas do app de desktop do Codex, cada uma marcada com uma pequena etiqueta Codex.
 Os ajudantes (subagentes) que cada sessão chamou ganham cartões próprios, e a próxima etapa de um orquestrador que ainda não abriu também.
 Linhas mostram quem abriu, chamou ou vem depois de quem, e uma regra de cores diz o que cada cartão está fazendo: trabalhando, esperando, pronto, parado ou encerrado.
 Tudo é lido do disco e de comandos locais; nenhum modelo entra no processo, e nada sai da máquina.
@@ -87,13 +91,15 @@ Tudo é lido do disco e de comandos locais; nenhum modelo entra no processo, e n
     <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/pt-BR/how-it-works-narrow-dark.svg" />
     <source media="(max-width: 600px)" srcset="assets/pt-BR/how-it-works-narrow-light.svg" />
     <source media="(prefers-color-scheme: dark)" srcset="assets/pt-BR/how-it-works-dark.svg" />
-    <img src="assets/pt-BR/how-it-works-light.svg" alt="Seis fontes, o registro de sessões, as conversas, os ajudantes, o ambiente dos processos, o Tern e os orquestradores, alimentam uma regra de cores, que dá duas saídas: o JSON do snapshot servido em /state e a página." width="100%" />
+    <img src="assets/pt-BR/how-it-works-light.svg" alt="Do Claude Code, o registro de sessões, as conversas e os ajudantes; do Codex, os rollouts, os nomes das conversas e os processos; mais o ambiente dos processos, o Tern e os orquestradores, alimentam uma regra de cores, que dá duas saídas: o JSON do snapshot servido em /state e a página." width="100%" />
   </picture>
 </p>
 
 ### De onde vem cada peça
 
 Cada fonte é lida por conta própria; uma que falha acrescenta uma linha aos problemas, e o resto do mapa sai mesmo assim.
+
+**Claude Code**:
 
 - **O registro de sessões**: o Claude Code mantém um arquivo por sessão em execução, `~/.claude/sessions/<pid>.json`, com o id da sessão, o cwd, o status (`idle`, `busy`, `waiting`, `shell`), o que ela espera, o nome dela e quando o status mudou pela última vez.
   Uma sessão está viva quando o processo dela responde a `os.kill(pid, 0)`.
@@ -107,10 +113,29 @@ Cada fonte é lida por conta própria; uma que falha acrescenta uma linha aos pr
   O `tern` é procurado em `~/.local/bin/tern`, senão no `PATH`.
 - **Orquestradores**: os adaptadores nomeados em `SESSION_MAP_ADAPTERS` (veja "Ponto de extensão").
 
+**Codex** (a pasta dele é `$CODEX_HOME`, senão `~/.codex`; `SESSION_MAP_CODEX_DIR` substitui as duas):
+
+- **Os rollouts**: `<codex folder>/sessions/YYYY/MM/DD/rollout-*.jsonl`, um arquivo por conversa.
+  Só conta o cabeçalho da primeira linha (`session_meta`: o id da conversa, a pasta dela, o programa que a escreveu e, para um ajudante, o pai e o apelido dele); o segundo cabeçalho que um rollout bifurcado traz é ignorado.
+  O mapa só faz parse das linhas que trazem as configurações de um turno (a política de aprovação e quem revisa as aprovações), o começo ou o fim de um turno, uma chamada de ferramenta ou uma mensagem sua; a linha de resultado de uma chamada de ferramenta só dá o id da chamada, tirado por uma regex, e nunca passa por parse.
+  Só são lidos os rollouts que mudaram nas últimas 8 horas, mais qualquer um que um Codex de terminal vivo ainda possa estar escrevendo.
+- **Os nomes das conversas**: `<codex folder>/session_index.jsonl`, o último nome dado a cada conversa.
+- **Os processos**: um `ps -axo pid=,ppid=,etime=,comm=` por snapshot; de cada linha só saem o pid, o pid do pai, o tempo decorrido e se o programa é o `codex` ou o app do ChatGPT.
+  Depois, um `ps eww` sobre os processos do Codex de terminal ainda não vistos, do qual só se tiram `PWD=` e `TERN_PANE=` (a última ocorrência de cada um, para que um prompt que digite `PWD=` nunca ganhe) e se o primeiro argumento é `app-server`; o resto de cada linha é descartado ali mesmo onde é lido.
+  Um Codex de terminal é um processo chamado `codex` em que nenhum dos pais é o app do ChatGPT ou outro `codex`, e cujo primeiro argumento não é `app-server` (o servidor em segundo plano que um Codex de terminal inicia e que continua vivo depois dele).
+  O app de desktop está vivo enquanto o processo do próprio app do ChatGPT roda.
+- **Tern**: um cartão do Codex num painel do Tern pega o número da aba do mesmo `tern ls --json`.
+
+Uma execução que aponta o leitor do Claude Code para fixtures (`SESSION_MAP_REGISTRY_DIR`, `SESSION_MAP_PROJECTS_DIR` ou `SESSION_MAP_PS_JSON` definida) e não define `SESSION_MAP_CODEX_DIR` não lê nada do Codex, então uma execução de testes nunca mistura as suas conversas reais do Codex com as fixtures.
+Uma pasta `sessions` que não existe (Codex não instalado) é uma fonte vazia, não um problema.
+Quando o `ps` falha para o Codex, os problemas dizem só `codex: ps did not answer`.
+
 O mapa lê cada conversa de forma incremental: um arquivo cujo tamanho, horário de modificação e inode não mudaram nem é lido, um arquivo que cresceu é lido só a partir de onde a última leitura parou, e a última fala vem de no máximo os últimos 64 KiB (2 MiB quando essa janela não a contém).
+Os rollouts e os nomes das conversas do Codex são lidos do mesmo jeito incremental, então um segundo snapshot sobre arquivos sem mudança não lê nada, por maiores que os rollouts fiquem.
 
 O título do cartão de uma sessão é o primeiro destes que existir: o nome que a pessoa deu à sessão, o último título personalizado da conversa, o último título dado pela IA, o título da aba do Tern (só cartões do Tern), o nome que o Claude Code derivou, senão "unnamed session".
 Um cartão orquestrado usa o rótulo da sua etapa no lugar.
+O título de um cartão do Codex é o último nome da conversa em `session_index.jsonl`, senão "unnamed session"; o de um ajudante do Codex é o apelido dele, senão "helper".
 Todo título é limpo: o sinal de spinner na frente sai, ele fica numa linha só, caminhos da home, UUIDs e pares `KEY=value` viram `…`, e ele é cortado em 80 caracteres.
 
 <a id="comandos"></a>
@@ -151,13 +176,18 @@ Configurações, todas opcionais:
 | `SESSION_MAP_PS_JSON` | uma lista JSON de linhas do `ps` lida no lugar de rodar o `ps` (para testes) | nenhum |
 | `SESSION_MAP_TERN_JSON` | um arquivo lido no lugar de rodar `tern ls --json` (para testes) | nenhum |
 | `SESSION_MAP_STEPS_FILE` | o arquivo de etapas do adaptador de exemplo do Orca (veja "Adicionando o Orca ao seu fluxo") | nenhum |
+| `SESSION_MAP_SOURCES` | as fontes de sessão a ler, uma lista de `claude` e `codex` separada por vírgula; `claude` é sempre lida, e um nome desconhecido acrescenta uma linha de problema (veja "Adicionando outro agente") | `claude,codex` |
+| `SESSION_MAP_CODEX_DIR` | lê os arquivos do Codex desta pasta (e também mantém a fonte do Codex ligada numa execução que aponta o leitor do Claude Code para fixtures) | `$CODEX_HOME`, senão `~/.codex` |
+| `SESSION_MAP_CODEX_PS_JSON` | um arquivo JSON, `{"comm": [...], "env": [...]}`, com as linhas dos dois comandos `ps` do Codex, lido no lugar de rodá-los (para testes) | nenhum |
 
 O `CLAUDE_CONFIG_DIR`, quando definido, substitui `~/.claude` como base das duas pastas padrão, como faz no próprio Claude Code.
+O `CODEX_HOME`, quando definido, substitui `~/.codex`, como faz no próprio Codex.
 
 <a id="regra-das-cores"></a>
 
 ## A regra das cores
 
+**Para as sessões do Claude Code.**
 O estado de uma sessão é decidido por uma regra, lida de cima para baixo; o primeiro sinal que existir decide.
 
 1. Sem entrada no registro, ou com o processo morto: **encerrada** (`closed`).
@@ -182,11 +212,36 @@ O `guessed` marca o único estado que vem de como a última mensagem está escri
 Um ajudante cujo meta diz `finished` é **pronto**, e sai do mapa 10 minutos depois da última mudança no meta.
 Um ajudante não terminado está **trabalhando** até ficar em silêncio (nem o meta nem a transcrição mudaram): em silêncio por mais de 5 minutos enquanto a sessão dele não está `busy`, ele fica **encerrado**; em silêncio por mais de 15 minutos ele sai do mapa, faça a sessão o que fizer.
 
+**Para as sessões do Codex.**
+Uma conversa do Codex é um arquivo de rollout, e o cartão dela passa por uma regra própria, lida do mesmo jeito, de cima para baixo:
+
+1. Não está viva: nenhum cartão, como uma sessão do Claude Code morta.
+   Uma conversa de terminal está viva quando um Codex de terminal em execução foi aberto na pasta da conversa (o `PWD` dele) e começou antes do último registro dela; quando várias conversas casam com um processo, só a que foi escrita por último está viva.
+   Uma conversa do app de desktop está viva enquanto o app do ChatGPT roda.
+2. Uma pergunta para você (a chamada `request_user_input_async`) no turno aberto, sem mensagem sua depois dela: **esperando**, "question or form", com `inferred: true`.
+3. Um turno está aberto (começou e não terminou):
+   - um comando que pediu permissões elevadas está há mais de 3 segundos sem resultado, sob uma política de aprovação que pergunta a você (`on-request` ou `untrusted`) e com você como revisor: **esperando**, "permission request", com `inferred: true`;
+   - senão, nada foi escrito há mais de 15 minutos: **parada** (travada);
+   - senão, **trabalhando**, desde que o turno começou.
+4. O turno terminou: com um erro, **parada**; senão a última mensagem do agente passa pela mesma regra do fim de turno da regra 5 acima (sem texto é **parada**, as linhas de pronto, as marcas de espera, uma pergunta nas últimas três linhas é **esperando** com `guessed: true`, qualquer outra coisa é **pronta**).
+5. O turno foi interrompido: **parada**.
+6. Qualquer outra coisa (só o cabeçalho, nada ainda): **parada**.
+
+O Codex não grava no disco um pedido de permissão, então o amarelo de permissão de um cartão do Codex é inferido de um comando que precisa de aprovação e ainda não tem resultado; o snapshot marca isso com `inferred: true`, e a página avisa.
+O Codex também não grava se uma pergunta ainda está aberta (a chamada da pergunta é confirmada na hora, e a sua resposta chega como a sua próxima mensagem), então a espera por uma pergunta também é inferida: a sua próxima mensagem, ou o fim do turno, a desfaz.
+O `inferred` é um motivo diferente do `guessed` para confiar um pouco menos numa cor, e a página diz qual dos dois vale.
+
+**Ajudantes do Codex**: uma conversa que uma sessão do Codex criou (um subagente) é um cartão de ajudante embaixo do pai, com uma linha `called`, e `where` igual a `Codex helper`.
+Ele está **trabalhando** enquanto um turno está aberto, **pronto** depois que o último turno terminou (**encerrado** depois de um turno interrompido), e sai do mapa 10 minutos depois da última mudança no arquivo; um não terminado que fica em silêncio segue a regra dos ajudantes acima (5 e 15 minutos).
+O revisor automático de aprovações que o Codex roda como ajudante (o guardian) nunca vira cartão.
+
 **Próxima**: uma etapa de orquestrador que ainda não abriu é um cartão tracejado no estado **próxima** (`next`).
 
 **Ocultos**: um cartão de sessão pronto ou parado que não muda há mais de 8 horas fica fora do mapa junto com os ajudantes dele; o snapshot os conta em `hidden_n`, e o rodapé da página diz quantos são.
+O mesmo vale para os cartões do Codex.
 
 **Sessões que sumiram**: o servidor mantém no mapa, como **encerrada**, uma sessão ou um ajudante que desapareceu do registro, por 10 minutos, e depois tira.
+Um cartão do Codex cujo processo acabou (ou cujo app foi fechado) fica do mesmo jeito.
 Um `session-map snapshot` avulso não tem memória das execuções anteriores, então nunca mostra esses.
 
 Na página, os cartões trabalhando brilham em azul, esperando é amarelo, pronto é verde, parado é cinza, encerrado é um verde desbotado e próxima é tracejado.
@@ -224,17 +279,20 @@ Um nó:
 
 | Chave | Valor |
 |---|---|
-| `id` | `p:<pid>` para uma sessão, `a:<8 hex>` para um ajudante, `n:<adapter index>:<12 hex>` para uma próxima etapa |
-| `kind` | `tern`, `orchestrated`, `background`, `other`, `helper` ou `next` |
+| `id` | `p:<pid>` para uma sessão do Claude Code, `x:<12 hex>` para uma sessão do Codex, `a:<8 hex>` para um ajudante (de qualquer um dos dois), `n:<adapter index>:<12 hex>` para uma próxima etapa |
+| `agent` | presente, e `codex`, só nos cartões do Codex; um cartão do Claude Code não tem a chave `agent` |
+| `kind` | `tern`, `orchestrated`, `background`, `other`, `app` (uma conversa do app de desktop do Codex), `helper` ou `next` |
 | `title` | o título do cartão (limpo, no máximo 80 caracteres) |
-| `where` | `Tern · tab <n>` (ou `Tern`), o nome do adaptador, `in the background`, `other terminal`, para um ajudante `team <name>` ou o tipo de agente dele, para uma próxima etapa `<adapter name> · next` |
+| `where` | `Tern · tab <n>` (ou `Tern`), o nome do adaptador, `in the background`, `other terminal`, para um ajudante `team <name>` ou o tipo de agente dele, para uma próxima etapa `<adapter name> · next`; para o Codex `Codex · Tern · tab <n>` (ou `Codex · Tern`), `Codex · other terminal`, `Codex app`, `Codex helper` |
 | `state` | `working`, `waiting`, `done`, `stopped`, `closed` ou `next` |
 | `since` | horário ISO local desde quando o estado vale, ou `null` |
 | `pane` | só cartões do Tern: o número do painel do Tern |
-| `waiting_for` | só esperando vindo do registro: `question or form`, `permission request`, `dialog open` ou `your decision` |
+| `waiting_for` | esperando vindo do registro, ou uma espera do Codex: `question or form`, `permission request`, `dialog open` ou `your decision` (um cartão do Codex só tem os dois primeiros) |
 | `guessed` | presente, e `true`, só quando o estado foi adivinhado pela última frase |
+| `inferred` | presente, e `true`, só num cartão do Codex esperando uma permissão ou uma resposta, que o Codex não grava no disco (veja "Para as sessões do Codex") |
 
 Os tipos, na ordem em que o mapa os decide: `orchestrated` (um adaptador reivindicou a sessão), `background` (tipo `bg` no registro, ou rodando no tmux), `tern` (ela tem um painel do Tern), `other` (nenhum desses); depois `helper` e `next`.
+Um cartão do Codex é `tern` (o processo dele tem um painel do Tern), `other` (um Codex de terminal fora do Tern) ou `app` (uma conversa do app de desktop); um ajudante do Codex é `helper`.
 
 Uma linha:
 
@@ -246,6 +304,7 @@ Uma linha:
 
 As duas pontas de toda linha são nós do mesmo snapshot.
 O snapshot nunca contém um caminho, um UUID, um id de sessão, um handle de terminal ou um par `KEY=value`.
+Para o Codex isso também quer dizer nenhum id de conversa, nenhuma pasta e nenhum texto de mensagem: o id de um cartão do Codex é um hash, e o título dele é o nome da conversa já limpo.
 
 <a id="orquestradores"></a>
 
@@ -379,6 +438,49 @@ A partir da pasta do repositório:
 SESSION_MAP_ADAPTERS=examples/orca_adapter.py:adapter session-map open
 ```
 
+<a id="fontes"></a>
+
+## Adicionando outro agente
+
+Cada tipo de agente que o mapa desenha é uma fonte de sessões, definida em `session_map/sources/__init__.py`:
+
+```python
+@dataclass(frozen=True)
+class Context:
+    now: float                  # epoch seconds of this snapshot
+    config: object              # the turn markers (SESSION_MAP_DONE_LINES, SESSION_MAP_WAIT_MARKS)
+    problems: list              # append short texts that never hold a path
+    tabs: Callable[[], dict]    # the Tern tabs: `tern ls` at most once per snapshot, call it only when needed
+
+@dataclass
+class SourceResult:
+    nodes: list                 # this source's cards, drawn after the sources before it
+    lines: list                 # its lines; both ends must be nodes of the snapshot
+    hidden_n: int = 0           # cards the 8-hour rule left out
+    hidden: set = field(default_factory=set)  # their ids
+    unknown_format: bool = False
+
+class Source(Protocol):
+    name: str                   # shown in a problem line, e.g. "Codex"
+    def read(self, ctx: Context) -> SourceResult: ...
+```
+
+**Registro.**
+Uma fonte é código dentro de `session_map/sources/`, listada em `BUILTIN` e criada por `selected()` nesse mesmo arquivo; ela não é carregada de um caminho, como os adaptadores de orquestrador.
+Uma fonte lê arquivos privados da sua máquina, então ela vai revisada junto com o pacote: `tests/test_sources_structure.py` roda sobre cada arquivo dessa pasta a mesma conferência de sem rede e sem programa estranho que o resto do pacote passa, e fixa a lista de arquivos.
+`SESSION_MAP_SOURCES` escolhe quais fontes embutidas rodam; o mapa sempre as desenha na ordem embutida, o Claude Code primeiro.
+
+**O contrato que toda fonte cumpre.**
+
+- Nenhum caminho, id ou texto de mensagem num nó: os ids são hashes (um cartão do Codex é `x:` mais os 12 primeiros caracteres hexadecimais do sha256 do id da conversa), e os títulos passam pela mesma limpeza dos do Claude Code.
+- Os mesmos cinco estados, decididos por uma regra escrita como as de cima; um estado que vem do jeito de escrever ou de uma inferência leva `guessed` ou `inferred`.
+- Isolamento: o Claude Code é lido primeiro, e toda outra fonte roda dentro de uma proteção, então uma que levanta uma exceção acrescenta `source <name>: failed (<error type>)` aos problemas, e o resto do mapa sai mesmo assim.
+- Os textos de problema nunca contêm um caminho (o núcleo também apaga qualquer caminho de disco que apareça neles).
+- Leituras incrementais: um segundo snapshot sobre arquivos sem mudança não lê nada.
+- Linhas só entre nós do mesmo snapshot; qualquer outra linha é descartada.
+
+O Gemini CLI ou qualquer outro agente se encaixa do mesmo jeito; hoje só o Claude Code e o Codex vêm embutidos.
+
 <a id="tern"></a>
 
 ## Embutindo num plugin do Tern
@@ -403,12 +505,14 @@ Comportamento e segurança:
 - Nada é registrado em log; o servidor iniciado pelo `open` manda a saída dele para o dispositivo nulo.
 - O servidor sai sozinho quando ninguém pede `/state` por `SESSION_MAP_IDLE_S` segundos (600 por padrão); `session-map open` o inicia de novo.
 - O `open` só reaproveita um servidor quando o cabeçalho `Server:` dele diz que é este mapa; se outro programa estiver na porta, ele avisa e para.
+  Esse cabeçalho ainda diz `claude-session-map`, então um servidor do mapa iniciado antes da troca de nome continua sendo reconhecido.
 
 ## Custo
 
 - A página pede `/state` a cada 2 segundos, e só enquanto está visível e alguém mexeu nela nos últimos 5 minutos; fora isso ela pausa até o próximo clique, tecla ou movimento do mouse.
 - Um mapa sem mudança responde `304` sem corpo.
 - As conversas são lidas de forma incremental (veja "De onde vem cada peça"), e o `ps` roda só para sessões ainda não vistas.
+- A fonte do Codex roda um `ps -axo` por snapshot e o `ps eww` só para processos do Codex ainda não vistos, e também lê os rollouts de forma incremental.
 - Quando o servidor não responde, a página espaça as tentativas (4, 8, 16 segundos e assim por diante, até 60).
 
 ## Limites
@@ -416,6 +520,13 @@ Comportamento e segurança:
 - O registro de sessões, os arquivos de conversa e os arquivos meta dos ajudantes são formatos internos do Claude Code e podem mudar; quando o registro não se parece com o formato conhecido, o snapshot define `unknown_format` e o rodapé da página avisa.
 - A página não tem arrastar nem zoom; o layout é automático.
 - Um painel do Tern se liga à sessão dele só pelo pid do registro e pelo `TERN_PANE`.
+- Os rollouts e o `session_index.jsonl` são formatos internos do Codex e podem mudar entre versões; o leitor pula os registros que não conhece, e um arquivo com linhas que ele não consegue ler acrescenta uma linha de problema.
+- Uma conversa do app de desktop do Codex conta como viva enquanto o app do ChatGPT roda; isso não é medido conversa por conversa, porque o Codex não deixa no disco nenhum sinal de vida por conversa, então uma conversa do desktop fica no mapa até a regra das 8 horas a esconder ou o app ser fechado.
+- O app de desktop do Codex não foi testado ao vivo: as conversas dele foram lidas só do disco, e só o Codex de terminal foi medido rodando.
+- Um Codex de terminal se liga à conversa dele pela pasta em que foi aberto (`PWD`): um Codex mandado trabalhar numa pasta diferente dessa não ganha cartão, e duas sessões do Codex de terminal abertas na mesma pasta só se distinguem por qual conversa cada uma escreveu por último.
+- Uma sessão do Codex numa aba de orquestrador aparece como cartão do Codex, sem casar com a etapa do orquestrador: os adaptadores só casam sessões do Claude Code.
+- Depois de um `codex resume`, o cartão volta assim que a sessão retomada escreve o primeiro registro novo.
+- Um cartão do Codex num painel do Tern mostra a aba dele, mas o botão "go to session" da página só funciona nos cartões do Claude Code.
 - Os testes trocam `ps`, `tern` e `orca` por fixtures e simulações; o Linux não é testado.
 
 <a id="requisitos"></a>

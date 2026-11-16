@@ -17,7 +17,8 @@ from . import server, snapshot
 
 
 def _parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="session-map", description="A live map of the Claude Code sessions here.")
+    ap = argparse.ArgumentParser(prog="session-map",
+                                 description="A live map of the agent sessions here (Claude Code and Codex).")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("snapshot", help="print the snapshot as JSON")
     s.add_argument("--problems", action="store_true", help="print only the texts of the sources that failed")
