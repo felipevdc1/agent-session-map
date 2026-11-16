@@ -1,0 +1,28 @@
+{
+  "steps": [
+    {
+      "key": "site-plan",
+      "label": "site · plan",
+      "state": "done",
+      "depends_on": [],
+      "manager_session_id": "manager-session",
+      "tabs": [{"session_id": "plan-session", "handle": "term_0000aaaa-0000-0000-0000-000000000001"}]
+    },
+    {
+      "key": "site-build",
+      "label": "site · build",
+      "state": "running",
+      "depends_on": ["site-plan"],
+      "manager_session_id": "manager-session",
+      "tabs": [{"session_id": "build-session", "handle": "term_0000aaaa-0000-0000-0000-000000000002"}]
+    },
+    {
+      "key": "site-test",
+      "label": "site · test",
+      "state": "pending",
+      "depends_on": ["site-build"],
+      "manager_session_id": "manager-session",
+      "tabs": []
+    }
+  ]
+}

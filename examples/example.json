@@ -1,0 +1,24 @@
+{
+  "version": "9e41c07ab2d3",
+  "generated_at": "2025-01-01T21:12:00+00:00",
+  "nodes": [
+    {"id": "p:48213", "kind": "tern", "title": "api · review", "where": "Tern · tab 1", "state": "waiting", "since": "2025-01-01T21:09:41+00:00", "pane": 3, "waiting_for": "permission request"},
+    {"id": "p:51877", "kind": "orchestrated", "title": "site · plan", "where": "Orchestrator", "state": "working", "since": "2025-01-01T21:01:12+00:00"},
+    {"id": "p:52240", "kind": "orchestrated", "title": "docs refresh", "where": "Orchestrator", "state": "done", "since": "2025-01-01T20:48:30+00:00"},
+    {"id": "n:0:3a9f0c1d2e4b", "kind": "next", "title": "site · build", "where": "Orchestrator · next", "state": "next", "since": null},
+    {"id": "a:3f9c21ab", "kind": "helper", "title": "Reads the server logs", "where": "general-purpose", "state": "working", "since": "2025-01-01T21:05:02+00:00"},
+    {"id": "a:7d04e8c2", "kind": "helper", "title": "Checks the module names", "where": "Explore", "state": "done", "since": "2025-01-01T21:06:47+00:00"},
+    {"id": "p:39102", "kind": "background", "title": "nightly report", "where": "in the background", "state": "done", "since": "2025-01-01T20:31:15+00:00", "guessed": true},
+    {"id": "p:45560", "kind": "tern", "title": "api · cleanup", "where": "Tern · tab 2", "state": "stopped", "since": "2025-01-01T19:58:04+00:00", "pane": 5},
+    {"id": "p:47731", "kind": "other", "title": "scratch notes", "where": "other terminal", "state": "working", "since": "2025-01-01T21:10:20+00:00"}
+  ],
+  "lines": [
+    {"from": "p:48213", "to": "p:51877", "kind": "opened"},
+    {"from": "p:48213", "to": "p:52240", "kind": "opened"},
+    {"from": "p:51877", "to": "n:0:3a9f0c1d2e4b", "kind": "follows"},
+    {"from": "p:51877", "to": "a:3f9c21ab", "kind": "called"},
+    {"from": "a:3f9c21ab", "to": "a:7d04e8c2", "kind": "called"}
+  ],
+  "problems_n": 0,
+  "hidden_n": 0
+}

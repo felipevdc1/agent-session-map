@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+prototype.html
+.DS_Store
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Secret-named files never belong in this repo.
+.env*
+*.pem
+*.key
+*credentials*
+client_secret*.json
+*token*.json
+.mcp.json
+*.mcp.json
+.mcp.local.json
+
+# Local agent and working notes.
+STATE.md
+AGENTS.md
+CLAUDE.md
+.planning/

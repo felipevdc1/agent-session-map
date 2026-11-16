@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live sessions</title>
+<style>
+:root {
+  --bg: #0f0f11;
+  --dot: rgba(255, 255, 255, 0.11);
+  --dot-step: 22px;
+  --glow-a: rgba(122, 28, 62, 0.20);
+  --glow-b: rgba(36, 46, 86, 0.30);
+
+  --card: #141416;
+  --card-head: #18181b;
+  --divider: rgba(255, 255, 255, 0.08);
+  --text: #ececf0;
+  --text-2: #9b9ca5;
+  --text-3: #6c6d75;
+
+  --radius: 16px;
+  --border-w: 1.5px;
+  --border: #2d2e33;
+
+  --curve: #c6c8cf;
+  --curve-w: 2px;
+  --curve-dash: 6 6;
+  --curve-follows: rgba(198, 200, 207, 0.32);
+  --port: #a3a6ae;
+  --port-r: 6px;
+
+  --spin-color: #8cc8ff;
+  --spin-time: 3s;
+  --yellow: #f2c84b;
+  --yellow-head: rgba(242, 200, 75, 0.12);
+  --green: #3fd68a;
+  --green-faded: rgba(63, 214, 138, 0.35);
+  --grey: #4c4e55;
+  --next-opacity: 0.45;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle, var(--dot) 1px, transparent 1.4px),
+    radial-gradient(ellipse 55% 45% at 18% 32%, var(--glow-a), transparent 70%),
+    radial-gradient(ellipse 60% 55% at 32% 72%, var(--glow-b), transparent 70%);
+  background-size: var(--dot-step) var(--dot-step), 100% 100%, 100% 100%;
+  background-attachment: scroll, fixed, fixed;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+  padding: 20px 24px 4px;
+}
+.top h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+}
+.legend .l-working { border-color: var(--spin-color); box-shadow: 0 0 6px var(--spin-color); }
+.legend .l-waiting { border-color: var(--yellow); }
+.legend .l-done { border-color: var(--green); }
+.legend .l-stopped { border-color: var(--grey); }
+.legend .l-next { border-style: dashed; border-color: var(--text-3); }
+
+.stage { position: relative; padding-bottom: 72px; }
+#map { position: relative; margin: 0; }
+#map svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+#curves path { fill: none; stroke: var(--curve); stroke-width: var(--curve-w); stroke-dasharray: var(--curve-dash); stroke-linecap: round; }
+#curves path.follows { stroke: var(--curve-follows); }
+#ports { z-index: 2; }
+#ports circle { fill: var(--port); stroke: var(--bg); stroke-width: 2px; }
+#ports circle.unlinked { opacity: 0.25; }
+
+.empty {
+  margin: 18vh 24px 0;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 16px;
+}
+
+/* ---------- card ---------- */
+.node {
+  position: absolute;
+  z-index: 1;
+  cursor: pointer;
+  border-radius: var(--radius);
+  outline: none;
+}
+.node.new { animation: fade-in 300ms ease-out both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  padding: var(--border-w);
+  background: var(--border);
+}
+.inner {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(var(--radius) - var(--border-w));
+  background: var(--card);
+  overflow: hidden;
+}
+.head {
+  padding: 12px 16px 11px;
+  background: var(--card-head);
+  border-bottom: 1px solid var(--divider);
+  font-weight: 700;
+  font-size: 14.5px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 10px 16px 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.meta .age { color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+.badge {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-2);
+  box-shadow: 0 0 0 2px var(--card-head);
+}
+
+.node:hover .frame { filter: brightness(1.15); }
+.node:focus-visible .frame, .node.selected .frame {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255, 255, 255, 0.55);
+}
+
+/* states */
+.state-working .frame { background: #1f2a36; box-shadow: 0 0 22px rgba(140, 200, 255, 0.12); }
+.state-working .frame::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 640px;
+  height: 640px;
+  background: conic-gradient(from 0deg, transparent 0deg 200deg, rgba(140, 200, 255, 0.25) 280deg, var(--spin-color) 338deg, #ffffff 354deg, transparent 360deg);
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: spin var(--spin-time) linear infinite;
+  will-change: transform;
+}
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+.state-waiting .frame { background: var(--yellow); }
+.state-waiting .head { background: var(--yellow-head); color: var(--yellow); }
+
+.state-done .frame { background: var(--green); }
+
+.state-stopped .frame { background: var(--grey); }
+.state-stopped .head { color: #c4c5cb; }
+
+.state-next { opacity: var(--next-opacity); }
+.state-next .frame { background: transparent; padding: 0; }
+.state-next .inner { border: var(--border-w) dashed var(--text-2); border-radius: var(--radius); background: rgba(20, 20, 22, 0.6); }
+.state-next .head { background: transparent; }
+
+.state-closed { opacity: 0.6; }
+.state-closed .frame { background: var(--green-faded); }
+
+@media (prefers-reduced-motion: reduce) {
+  .state-working .frame::before { animation: none; transform: translate(-50%, -50%) rotate(300deg); }
+  .node.new { animation: none; }
+}
+
+/* ---------- panel ---------- */
+#panel {
+  position: fixed;
+  z-index: 10;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: min(360px, calc(100vw - 32px));
+  overflow-y: auto;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(20, 20, 23, 0.97);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+}
+#panel[hidden] { display: none; }
+#panel .kind { margin: 0 0 6px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); }
+#panel h2 { margin: 0 0 14px; font-size: 20px; line-height: 1.25; overflow-wrap: anywhere; text-wrap: pretty; }
+#panel dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; font-size: 14px; }
+#panel dt { color: var(--text-3); }
+#panel dd { margin: 0; overflow-wrap: anywhere; }
+#panel .note { margin: 16px 0 0; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 13px; color: var(--text-2); }
+#panel .button {
+  margin-top: 18px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+#panel .button:hover { background: rgba(255, 255, 255, 0.06); }
+#panel .p-waiting { color: var(--yellow); }
+#panel .p-working { color: var(--spin-color); }
+#panel .p-done { color: var(--green); }
+
+/* ---------- footer ---------- */
+#footer {
+  position: fixed;
+  z-index: 5;
+  left: 16px;
+  bottom: 16px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(20, 20, 23, 0.9);
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+#footer.paused { color: var(--yellow); cursor: pointer; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Live sessions</h1>
+  <ul class="legend" aria-label="Legend">
+    <li><i class="l-working"></i>working</li>
+    <li><i class="l-waiting"></i>waiting for your decision</li>
+    <li><i class="l-done"></i>done</li>
+    <li><i class="l-stopped"></i>stopped</li>
+    <li><i class="l-next"></i>next</li>
+  </ul>
+</header>
+<main class="stage" id="stage">
+  <div id="map">
+    <svg id="curves" aria-hidden="true"></svg>
+    <svg id="ports" aria-hidden="true"></svg>
+  </div>
+  <p class="empty" id="empty" hidden>no session open right now</p>
+</main>
+<aside id="panel" hidden aria-live="polite"></aside>
+<footer id="footer">loading…</footer>
+
+<script id="data" type="application/json">null</script>
+
+<script id="logic">
+// Pure layout and state->class logic. No DOM access here, so node can run it.
+var MapLayout = (function () {
+  var MARGIN = 24;
+  var NODE_WIDTH = 256;
+  var GAP_X = 72;
+  var GAP_Y = 20;
+  var DEFAULT_HEIGHT = 96;
+  var INDENT = 28;
+  var MIN_WIDTH = 220;
+
+  var STATES = ["working", "waiting", "done", "stopped", "closed", "next"];
+
+  function stateClass(state) {
+    return "state-" + (STATES.indexOf(state) >= 0 ? state : "stopped");
+  }
+
+  function sinceTime(node) {
+    var t = node && node.since ? Date.parse(node.since) : NaN;
+    return isNaN(t) ? Infinity : t;
+  }
+
+  function sortNodes(list) {
+    return list.slice().sort(function (a, b) {
+      var d = sinceTime(a) - sinceTime(b);
+      if (d !== 0 && !isNaN(d)) return d;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+  }
+
+  // snapshot: the fixed snapshot; width: available width in px;
+  // heights: optional {id: measured height}. Returns positions and curve paths.
+  function layout(snapshot, width, heights) {
+    heights = heights || {};
+    var nodes = (snapshot && snapshot.nodes) || [];
+    var lines = (snapshot && snapshot.lines) || [];
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    var parent = {};
+    var lineKind = {};
+    lines.forEach(function (l) {
+      if (!byId[l.from] || !byId[l.to] || l.from === l.to) return;
+      if (parent[l.to] !== undefined) return;
+      parent[l.to] = l.from;
+      lineKind[l.to] = l.kind;
+    });
+    // Break cycles: a node whose ancestry loops back to itself becomes a root.
+    Object.keys(parent).forEach(function (id) {
+      var seen = {}, cur = id;
+      while (parent[cur] !== undefined) {
+        if (seen[cur]) { delete parent[id]; break; }
+        seen[cur] = true;
+        cur = parent[cur];
+      }
+    });
+
+    var children = {};
+    var roots = [];
+    nodes.forEach(function (n) {
+      var p = parent[n.id];
+      if (p === undefined) roots.push(n);
+      else (children[p] = children[p] || []).push(n);
+    });
+    roots = sortNodes(roots);
+    Object.keys(children).forEach(function (k) { children[k] = sortNodes(children[k]); });
+
+    var depth = {};
+    var order = [];
+    function walk(n, d) {
+      depth[n.id] = d;
+      order.push(n);
+      (children[n.id] || []).forEach(function (c) { walk(c, d + 1); });
+    }
+    roots.forEach(function (r) { walk(r, 0); });
+    var maxDepth = 0;
+    order.forEach(function (n) { maxDepth = Math.max(maxDepth, depth[n.id]); });
+
+    var wideWidth = 2 * MARGIN + (maxDepth + 1) * NODE_WIDTH + maxDepth * GAP_X;
+    var mode = wideWidth <= width ? "columns" : "list";
+    var pos = {};
+    var totalHeight = 0;
+
+    function height(id) {
+      var h = heights[id];
+      return typeof h === "number" && h > 0 ? h : DEFAULT_HEIGHT;
+    }
+
+    if (mode === "columns") {
+      var shift = Math.max(0, Math.floor((width - wideWidth) / 2));
+      var cursor = [];
+      var floor = MARGIN;
+      var put = function (n, minY) {
+        var d = depth[n.id];
+        var x = shift + MARGIN + d * (NODE_WIDTH + GAP_X);
+        var y = Math.max(cursor[d] || MARGIN, minY);
+        var h = height(n.id);
+        cursor[d] = y + h + GAP_Y;
+        pos[n.id] = {
+          x: x, y: y, w: NODE_WIDTH, h: h, depth: d,
+          entry: { x: x, y: y + h / 2 },
+          exit: { x: x + NODE_WIDTH, y: y + h / 2 }
+        };
+        (children[n.id] || []).forEach(function (c) { put(c, y); });
+      };
+      roots.forEach(function (r) {
+        put(r, floor);
+        cursor.forEach(function (c) { if (c > floor) floor = c; });
+      });
+      cursor.forEach(function (c) { if (c > totalHeight) totalHeight = c; });
+    } else {
+      var y = MARGIN;
+      order.forEach(function (n) {
+        var d = depth[n.id];
+        var x = MARGIN + d * INDENT;
+        var w = Math.max(MIN_WIDTH, width - MARGIN - x);
+        var h = height(n.id);
+        pos[n.id] = {
+          x: x, y: y, w: w, h: h, depth: d,
+          entry: { x: x, y: y + Math.min(h / 2, 24) },
+          exit: { x: x + 12, y: y + h }
+        };
+        y += h + GAP_Y;
+      });
+      totalHeight = y;
+    }
+
+    var curves = [];
+    nodes.forEach(function (n) {
+      var p = parent[n.id];
+      if (p === undefined) return;
+      var a = pos[p].exit, b = pos[n.id].entry, d;
+      if (mode === "columns") {
+        var mx = Math.max(40, (b.x - a.x) / 2);
+        d = "M" + a.x + "," + a.y + " C" + (a.x + mx) + "," + a.y + " " + (b.x - mx) + "," + b.y + " " + b.x + "," + b.y;
+      } else {
+        d = "M" + a.x + "," + a.y + " C" + a.x + "," + (a.y + (b.y - a.y) * 0.75) + " " + (a.x + (b.x - a.x) * 0.25) + "," + b.y + " " + b.x + "," + b.y;
+      }
+      curves.push({ from: p, to: n.id, kind: lineKind[n.id], d: d });
+    });
+
+    var totalWidth = 0;
+    Object.keys(pos).forEach(function (id) {
+      totalWidth = Math.max(totalWidth, pos[id].x + pos[id].w + MARGIN);
+    });
+
+    return {
+      mode: mode,
+      width: Math.ceil(totalWidth),
+      height: Math.ceil(totalHeight + MARGIN),
+      nodes: pos,
+      parent: parent,
+      with_children: Object.keys(children),
+      curves: curves
+    };
+  }
+
+  return { layout: layout, stateClass: stateClass };
+})();
+
+if (typeof module !== "undefined" && module.exports) { module.exports = MapLayout; }
+</script>
+
+<script>
+(function () {
+  if (typeof document === "undefined") return;
+
+  var POLL_MS = 2000;
+  var IDLE_MS = 5 * 60 * 1000;
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  var KINDS = {
+    tern: "Tern tab",
+    orchestrated: "orchestrated tab",
+    background: "in the background",
+    other: "other terminal",
+    helper: "helper",
+    next: "next step"
+  };
+  var LINKS = { opened: "opened this tab", called: "called this helper", follows: "comes before this step" };
+
+  var mapEl = document.getElementById("map");
+  var curvesSvg = document.getElementById("curves");
+  var portsSvg = document.getElementById("ports");
+  var emptyEl = document.getElementById("empty");
+  var panel = document.getElementById("panel");
+  var footer = document.getElementById("footer");
+
+  var embedded = null;
+  try { embedded = JSON.parse(document.getElementById("data").textContent); } catch (e) { embedded = null; }
+
+  var snapshot = null;
+  var placement = null;
+  var cards = {};
+  var selected = null;
+  var etag = null;
+  var lastUpdate = null;
+  var lastInteraction = Date.now();
+  var timer = null;
+  var paused = false;
+  var lastAgeRefresh = 0;
+
+  function now() {
+    if (embedded && embedded.generated_at) {
+      var t = Date.parse(embedded.generated_at);
+      if (!isNaN(t)) return t;
+    }
+    return Date.now();
+  }
+
+  function clock(iso) {
+    var t = Date.parse(iso);
+    if (isNaN(t)) return "";
+    return new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function ago(iso) {
+    var t = Date.parse(iso);
+    if (!iso || isNaN(t)) return "";
+    var min = Math.floor((now() - t) / 60000);
+    if (min < 1) return "just now";
+    if (min < 60) return min + " min ago";
+    var h = Math.floor(min / 60), r = min % 60;
+    return h + " h" + (r ? " " + r + " min" : "") + " ago";
+  }
+
+  function stateInWords(node) {
+    var since = node.since ? clock(node.since) : "";
+    switch (node.state) {
+      case "working": return "working now" + (since ? ", since " + since : "");
+      case "waiting": return "waiting for your decision" + (node.waiting_for ? ": " + node.waiting_for : "") + (since ? ", since " + since : "");
+      case "done": return "done" + (since ? ", since " + since : "");
+      case "stopped": return "stopped, no work right now";
+      case "closed": return "closed a moment ago; disappears in 10 min";
+      case "next": return "not open yet; opens when the previous step finishes";
+      default: return "stopped";
+    }
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function fillCard(c, node) {
+    c.className = "node " + MapLayout.stateClass(node.state) + (c.dataset.fresh ? " new" : "") + (selected === node.id ? " selected" : "");
+    c.setAttribute("aria-label", node.title + ", " + stateInWords(node));
+    c.textContent = "";
+    var frame = el("div", "frame");
+    var inner = el("div", "inner");
+    inner.appendChild(el("div", "head", node.title || "(untitled)"));
+    var meta = el("div", "meta");
+    meta.appendChild(el("span", "where", node.where || ""));
+    var t = node.state === "next" ? "not open yet" : ago(node.since);
+    if (t) meta.appendChild(el("span", "age", t));
+    inner.appendChild(meta);
+    frame.appendChild(inner);
+    c.appendChild(frame);
+    if (node.guessed) {
+      var s = el("span", "badge");
+      s.title = "color guessed from the last sentence";
+      c.appendChild(s);
+    }
+  }
+
+  function draw(snap) {
+    snapshot = snap;
+    var nodes = (snapshot && snapshot.nodes) || [];
+    emptyEl.hidden = nodes.length > 0;
+    mapEl.hidden = nodes.length === 0;
+
+    var live = {};
+    nodes.forEach(function (node) {
+      live[node.id] = true;
+      var c = cards[node.id];
+      if (!c) {
+        c = el("div");
+        c.dataset.id = node.id;
+        c.dataset.fresh = "1";
+        c.tabIndex = 0;
+        c.setAttribute("role", "button");
+        cards[node.id] = c;
+        mapEl.appendChild(c);
+      } else {
+        delete c.dataset.fresh;
+      }
+      // Reconcile by id: an unchanged card keeps its DOM (no redraw); a changed one is refilled in place.
+      var signature = JSON.stringify(node);
+      if (c.dataset.signature !== signature) {
+        c.dataset.signature = signature;
+        fillCard(c, node);
+      }
+    });
+    Object.keys(cards).forEach(function (id) {
+      if (!live[id]) { cards[id].remove(); delete cards[id]; }
+    });
+    if (selected && !live[selected]) closePanel();
+    place();
+    if (selected) openPanel(selected);
+  }
+
+  function place(again) {
+    if (!snapshot || !snapshot.nodes || !snapshot.nodes.length) return;
+    // A tall map can bring in a scrollbar that narrows the page: lay out once more.
+    if (again !== true) {
+      mapEl.style.width = "0px";
+      curvesSvg.setAttribute("width", 0);
+      portsSvg.setAttribute("width", 0);
+    }
+    var width = document.documentElement.clientWidth;
+    var draft = MapLayout.layout(snapshot, width);
+    snapshot.nodes.forEach(function (node) { cards[node.id].style.width = draft.nodes[node.id].w + "px"; });
+    var heights = {};
+    snapshot.nodes.forEach(function (node) { heights[node.id] = cards[node.id].offsetHeight; });
+    placement = MapLayout.layout(snapshot, width, heights);
+
+    mapEl.style.width = placement.width + "px";
+    mapEl.style.height = placement.height + "px";
+    [curvesSvg, portsSvg].forEach(function (s) {
+      s.setAttribute("width", placement.width);
+      s.setAttribute("height", placement.height);
+      s.textContent = "";
+    });
+    snapshot.nodes.forEach(function (node) {
+      var p = placement.nodes[node.id];
+      var c = cards[node.id];
+      c.style.left = p.x + "px";
+      c.style.top = p.y + "px";
+      c.style.width = p.w + "px";
+    });
+    placement.curves.forEach(function (l) {
+      var path = document.createElementNS(SVGNS, "path");
+      path.setAttribute("d", l.d);
+      if (l.kind === "follows") path.setAttribute("class", "follows");
+      curvesSvg.appendChild(path);
+    });
+    var withChildren = {};
+    placement.with_children.forEach(function (id) { withChildren[id] = true; });
+    snapshot.nodes.forEach(function (node) {
+      var p = placement.nodes[node.id];
+      [["entry", placement.parent[node.id] !== undefined], ["exit", !!withChildren[node.id]]].forEach(function (pair) {
+        var port = p[pair[0]];
+        var circ = document.createElementNS(SVGNS, "circle");
+        circ.setAttribute("cx", port.x);
+        circ.setAttribute("cy", port.y);
+        circ.setAttribute("r", parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--port-r")) || 6);
+        if (!pair[1]) circ.setAttribute("class", "unlinked");
+        portsSvg.appendChild(circ);
+      });
+    });
+    if (again !== true && document.documentElement.clientWidth !== width) place(true);
+  }
+
+  function refreshAges() {
+    if (!snapshot || !snapshot.nodes) return;
+    snapshot.nodes.forEach(function (node) {
+      var c = cards[node.id];
+      var span = c && c.querySelector(".age");
+      if (!span || node.state === "next") return;
+      var t = ago(node.since);
+      if (span.textContent !== t) span.textContent = t;
+    });
+  }
+
+  function findNode(id) {
+    var nodes = (snapshot && snapshot.nodes) || [];
+    for (var i = 0; i < nodes.length; i++) if (nodes[i].id === id) return nodes[i];
+    return null;
+  }
+
+  function row(dl, label, value, cls) {
+    if (!value) return;
+    dl.appendChild(el("dt", "", label));
+    dl.appendChild(el("dd", cls || "", value));
+  }
+
+  function openPanel(id) {
+    var node = findNode(id);
+    if (!node) { closePanel(); return; }
+    if (selected && cards[selected]) cards[selected].classList.remove("selected");
+    selected = id;
+    if (cards[id]) cards[id].classList.add("selected");
+    panel.textContent = "";
+    panel.appendChild(el("p", "kind", KINDS[node.kind] || "session"));
+    panel.appendChild(el("h2", "", node.title || "(untitled)"));
+    var dl = el("dl");
+    row(dl, "where", node.where);
+    row(dl, "state", stateInWords(node), "p-" + node.state);
+    if (node.since) row(dl, "since", clock(node.since) + " · " + ago(node.since));
+    var parentId = placement && placement.parent[id];
+    if (parentId !== undefined) {
+      var p = findNode(parentId);
+      var kind = null;
+      (snapshot.lines || []).forEach(function (l) { if (l.to === id && l.from === parentId) kind = l.kind; });
+      row(dl, "linked to", (p ? p.title : "") + (kind && LINKS[kind] ? " (" + LINKS[kind] + ")" : ""));
+    }
+    panel.appendChild(dl);
+    if (node.guessed) panel.appendChild(el("p", "note", "Color guessed from the last sentence: no sure signal gave the state, so the color comes from how the last message ends. Trust it a little less."));
+    if (focusReply && focusReply.id === id) panel.appendChild(el("p", "note", focusReply.text));
+    if (canFocus(node)) {
+      var go = el("button", "button", "go to session");
+      go.type = "button";
+      go.addEventListener("click", function () { focusSession(id); });
+      panel.appendChild(go);
+      panel.appendChild(document.createTextNode(" "));
+    }
+    var close = el("button", "button", "close");
+    close.type = "button";
+    close.addEventListener("click", closePanel);
+    panel.appendChild(close);
+    panel.hidden = false;
+  }
+
+  function closePanel() {
+    if (selected && cards[selected]) cards[selected].classList.remove("selected");
+    selected = null;
+    focusReply = null;
+    panel.hidden = true;
+  }
+
+  // ---------- jump to the session (POST /focus; the server finds the tab from its own snapshot) ----------
+  var focusReply = null;
+
+  function canFocus(node) {
+    if (embedded || !/^p:\d+$/.test(node.id)) return false;
+    return (node.kind === "tern" && typeof node.pane === "number") || node.kind === "orchestrated";
+  }
+
+  function focusSession(id) {
+    focusReply = { id: id, text: "taking you to the session…" };
+    openPanel(id);
+    fetch("/focus", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id }),
+      cache: "no-store"
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; });
+    }).then(function (d) {
+      return d.message || d.error || "could not take you to the session";
+    }, function () {
+      return "the map did not answer; try again";
+    }).then(function (text) {
+      if (selected !== id) return;
+      focusReply = { id: id, text: text };
+      openPanel(id);
+    });
+  }
+
+  mapEl.addEventListener("click", function (ev) {
+    var c = ev.target.closest(".node");
+    if (c) { ev.stopPropagation(); openPanel(c.dataset.id); }
+  });
+  mapEl.addEventListener("keydown", function (ev) {
+    var c = ev.target.closest(".node");
+    if (c && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); openPanel(c.dataset.id); }
+  });
+  document.addEventListener("click", function (ev) {
+    if (panel.hidden) return;
+    if (panel.contains(ev.target) || ev.target.closest(".node")) return;
+    closePanel();
+  });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") closePanel(); });
+
+  var resizeWait = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeWait);
+    resizeWait = setTimeout(place, 150);
+  });
+
+  // ---------- footer + polling ----------
+  function plural(n, one, many) { return n === 1 ? one : many; }
+
+  function writeFooter(text) {
+    var n = (snapshot && snapshot.problems_n) || 0;
+    if (n > 0) text += " · " + n + plural(n, " source did not answer", " sources did not answer");
+    var h = (snapshot && snapshot.hidden_n) || 0;
+    if (h > 0) text += " · " + h + plural(h, " session stopped for more than 8 h hidden", " sessions stopped for more than 8 h hidden");
+    if (snapshot && snapshot.unknown_format) text += " · session registry not in the known format";
+    footer.textContent = text;
+  }
+
+  function liveFooter() {
+    footer.classList.remove("paused");
+    if (!lastUpdate) { writeFooter("loading…"); return; }
+    var s = Math.max(0, Math.round((Date.now() - lastUpdate) / 1000));
+    writeFooter("updated " + s + " s ago");
+  }
+
+  function canPoll() {
+    return !document.hidden && Date.now() - lastInteraction < IDLE_MS;
+  }
+
+  function pause() {
+    paused = true;
+    clearTimeout(timer);
+    timer = null;
+    footer.classList.add("paused");
+    writeFooter("paused — click to resume");
+  }
+
+  // Failures back off (2 s, 4 s, 8 s … up to 60 s): a server that exited is never hammered.
+  var BACKOFF_MAX_MS = 60000;
+  var FAILURES_OFF = 3;
+  var failures = 0;
+  var resumed = false;
+
+  function nextWait() {
+    return failures ? Math.min(BACKOFF_MAX_MS, POLL_MS * Math.pow(2, failures)) : POLL_MS;
+  }
+
+  // The server exits by itself after 10 min with no one looking; say so and how to open it again.
+  function turnedOff() {
+    footer.classList.remove("paused");
+    footer.textContent = "The map was turned off after 10 minutes without use. To open it again run: session-map open";
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    timer = null;
+    if (!canPoll()) { pause(); return; }
+    timer = setTimeout(poll, nextWait());
+  }
+
+  function poll() {
+    timer = null;
+    if (!canPoll()) { pause(); return; }
+    paused = false;
+    var headers = etag ? { "If-None-Match": etag } : {};
+    var noAnswer = false;
+    fetch("/state", { headers: headers, cache: "no-store" }).catch(function (e) {
+      noAnswer = true;  // no HTTP answer at all: the server is gone (not a 500)
+      throw e;
+    }).then(function (r) {
+      if (r.status !== 304 && !r.ok) { failures++; throw new Error("status " + r.status); }
+      failures = 0;
+      resumed = false;
+      if (r.status === 304) { lastUpdate = Date.now(); return null; }
+      return r.json().then(function (snap) {
+        etag = r.headers.get("ETag") || (snap.version ? '"' + snap.version + '"' : null);
+        lastUpdate = Date.now();
+        draw(snap);
+        lastAgeRefresh = Date.now();
+      });
+    }).then(function () {
+      if (Date.now() - lastAgeRefresh > 30000) { refreshAges(); lastAgeRefresh = Date.now(); }
+      liveFooter();
+    }).catch(function () {
+      if (noAnswer) failures++;
+      if (noAnswer && (resumed || failures >= FAILURES_OFF)) {
+        turnedOff();
+      } else {
+        footer.classList.remove("paused");
+        writeFooter("the map did not answer; trying again");
+      }
+      resumed = false;
+    }).then(schedule);
+  }
+
+  function interacted() {
+    lastInteraction = Date.now();
+    if (paused && !embedded && canPoll()) { paused = false; resumed = true; liveFooter(); poll(); }
+  }
+
+  if (embedded) {
+    draw(embedded);
+    writeFooter("fixed snapshot" + (embedded.generated_at ? " from " + clock(embedded.generated_at) : "") + ", not updating");
+  } else {
+    ["pointerdown", "keydown", "focus", "wheel"].forEach(function (t) { window.addEventListener(t, interacted, { passive: true }); });
+    window.addEventListener("mousemove", function () { lastInteraction = Date.now(); if (paused) interacted(); }, { passive: true });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) pause(); else interacted();
+    });
+    footer.addEventListener("click", interacted);
+    poll();
+  }
+})();
+</script>
+</body>
+</html>
