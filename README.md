@@ -1,30 +1,56 @@
-# claude-session-map
+**English** · [Português](README.pt-BR.md)
 
-## What it is
+<a id="top"></a>
 
-A live map of the Claude Code sessions on one machine, drawn as cards in a browser page.
-Every live session is a card: Tern tabs, tabs an orchestrator opened, background sessions and sessions in any other terminal.
-The helpers (subagents) each session called get their own cards, and so does an orchestrator's next step that has not opened yet.
-Lines show who opened, called or comes after whom, and one color rule says what each card is doing: working, waiting, done, stopped or closed.
-Everything is read from disk and from local commands; no model is involved, and nothing leaves the machine.
-It is Python 3.9+ standard library only, with one HTML page.
+<p align="center">
+  <picture>
+    <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/en/hero-narrow-dark.svg" />
+    <source media="(max-width: 600px)" srcset="assets/en/hero-narrow-light.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="assets/en/hero-dark.svg" />
+    <img src="assets/en/hero-light.svg" alt="An animated map of Claude Code sessions drawn as cards: two working sessions with a light turning around their frames, one of them turning yellow to wait on a permission request, a helper turning green when it is done, a grey stopped session, a dashed next step and a closed session fading out, joined by dashed lines. The names are invented." width="100%" />
+  </picture>
+</p>
 
+<h1 align="center">claude-session-map</h1>
+
+<p align="center"><strong>See every Claude Code session on your machine, live.</strong></p>
+
+<p align="center">A live map of the Claude Code sessions on one machine, drawn as cards in a browser page.
+Everything is read from disk and from local commands; no model is involved, and nothing leaves the machine.</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-3fd68a?labelColor=141416" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/Claude%20Code-session%20map-8cc8ff?labelColor=141416" alt="Made for Claude Code" />
+  <img src="https://img.shields.io/badge/macOS-tested-4c4e55?labelColor=141416" alt="Tested on macOS" />
+  <img src="https://img.shields.io/badge/Python-3.9%2B-f2c84b?labelColor=141416" alt="Python 3.9 or newer, standard library only" />
+  <img src="https://img.shields.io/badge/Tern-optional-7a1c3e?labelColor=141416" alt="Tern optional" />
+</p>
+
+<p align="center"><a href="#install"><strong>Install</strong></a> · <a href="#how-it-works">How it works</a> · <a href="#commands">Commands</a> · <a href="#color-rule">The color rule</a> · <a href="#snapshot">Snapshot</a> · <a href="#orchestrators">Orchestrators</a> · <a href="#orca">Orca</a> · <a href="#requirements">Requirements</a></p>
+
+<a id="install"></a>
+
+## Install
+
+Open **Claude Code** in any folder and paste this request.
+It clones this repository, checks your Python and opens the map.
+
+```text
+Install claude-session-map from https://github.com/felipevdc1/claude-session-map. Clone it into a folder of my choice (ask me which), check that python3 is 3.9 or newer, then run python3 -m session_map open from the clone. Tell me the address the map opened at (http://127.0.0.1:9131/ unless SESSION_MAP_PORT is set), and that running the same command again reopens it.
 ```
- +---------------------------+     opened      +---------------------------+
- | api · review              |---------------->| site · plan               |
- | Tern · tab 1              |                 | Orca                      |
- | waiting: permission req.  |                 | working                   |
- +---------------------------+                 +---------------------------+
-                                                 |  called         : follows
-                                                 v                 v
-                              +---------------------------+  +- - - - - - - - - - - - -+
-                              | Reads the server logs     |  : site · build            :
-                              | general-purpose           |  : Orca · next             :
-                              | working                   |  : next                    :
-                              +---------------------------+  +- - - - - - - - - - - - -+
-```
 
-## Quick start
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/en/install-dark.svg" />
+    <img src="assets/en/install-light.svg" alt="In Claude Code: paste the install request, the repository is cloned, python3 is checked, python3 -m session_map open runs, and the map opens in the default browser at http://127.0.0.1:9131/." width="100%" />
+  </picture>
+</p>
+
+When it finishes, the map is open in your browser (inside a Tern pane, beside it).
+Run `python3 -m session_map open` again any time.
+
+<details>
+<summary><strong>Install from the terminal</strong></summary>
 
 From a clone of this repository:
 
@@ -39,48 +65,33 @@ pip install .
 session-map open
 ```
 
-`open` reuses the map's server if it is already running, or starts one in the background, then opens the page.
-Inside a Tern pane it opens the page in a browser block beside that pane; anywhere else it opens the default browser (`open` on macOS, `xdg-open` elsewhere).
+</details>
 
-The other commands:
+<a id="what-it-is"></a>
 
-```
-session-map snapshot              # print the snapshot as JSON
-session-map snapshot --problems   # print only the texts of the sources that failed ("no problems" when none)
-session-map prototype --out map.html   # write the page with the snapshot of now embedded (default ./prototype.html)
-session-map serve                 # run the server in the foreground
-```
+## What it is
 
-Exit codes: 0 ok, 1 error, 2 bad arguments.
-No command prints a traceback.
+A live map of the Claude Code sessions on one machine, drawn as cards in a browser page.
+Every live session is a card: Tern tabs, tabs an orchestrator opened, background sessions and sessions in any other terminal.
+The helpers (subagents) each session called get their own cards, and so does an orchestrator's next step that has not opened yet.
+Lines show who opened, called or comes after whom, and one color rule says what each card is doing: working, waiting, done, stopped or closed.
+Everything is read from disk and from local commands; no model is involved, and nothing leaves the machine.
+It is Python 3.9+ standard library only, with one HTML page.
 
-Requirements:
+<a id="how-it-works"></a>
 
-- Python 3.9 or newer, no dependencies.
-- macOS is the tested platform.
-- Linux is likely to work (`ps eww` exists there, and `xdg-open` replaces `open`) but is not tested.
-- Windows is not supported: the map finds a session's Tern pane by reading the process environment with `ps eww`, and the standard library has no Windows equivalent.
-- Tern is optional; without it the map still shows every session, as "other terminal".
+## How it works
 
-Settings, all optional:
+<p align="center">
+  <picture>
+    <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/en/how-it-works-narrow-dark.svg" />
+    <source media="(max-width: 600px)" srcset="assets/en/how-it-works-narrow-light.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="assets/en/how-it-works-dark.svg" />
+    <img src="assets/en/how-it-works-light.svg" alt="Six sources, the session registry, the conversations, the helpers, the process environment, Tern and orchestrators, feed one color rule, which gives two outputs: the snapshot JSON served at /state and the page." width="100%" />
+  </picture>
+</p>
 
-| Variable | What it does | Default |
-|---|---|---|
-| `SESSION_MAP_PORT` | the server's port | `9131` |
-| `SESSION_MAP_IDLE_S` | the server exits after this many seconds with no request for `/state` | `600` |
-| `SESSION_MAP_PAGE` | serve this HTML file instead of the packaged page | the packaged `page.html` |
-| `SESSION_MAP_ADAPTERS` | orchestrator adapters to load (see "Extension point") | none |
-| `SESSION_MAP_DONE_LINES` | turn markers that mean done (see "The color rule") | empty |
-| `SESSION_MAP_WAIT_MARKS` | turn markers that mean waiting (see "The color rule") | empty |
-| `SESSION_MAP_REGISTRY_DIR` | read the session registry from this folder | `~/.claude/sessions` |
-| `SESSION_MAP_PROJECTS_DIR` | read conversations from this folder | `~/.claude/projects` |
-| `SESSION_MAP_PS_JSON` | a JSON list of `ps` lines read instead of running `ps` (for tests) | none |
-| `SESSION_MAP_TERN_JSON` | a file read instead of running `tern ls --json` (for tests) | none |
-| `SESSION_MAP_STEPS_FILE` | the step file of the example Orca adapter (see "Adding Orca to your workflow") | none |
-
-`CLAUDE_CONFIG_DIR`, when set, replaces `~/.claude` as the base of the two default folders, as it does for Claude Code itself.
-
-## Where every piece comes from
+### Where every piece comes from
 
 Each source is read on its own; one that fails adds a line to the problems and the rest of the map still comes out.
 
@@ -101,6 +112,49 @@ The map reads each conversation incrementally: a file whose size, modification t
 A session card's title is the first of these that exists: the name the person gave the session, the conversation's last custom title, its last AI title, the Tern tab's title (Tern cards only), the name Claude Code derived, else "unnamed session".
 An orchestrated card takes its step's label instead.
 Every title is cleaned: the spinner sign in front is dropped, it is one line, home paths, UUIDs and `KEY=value` pairs become `…`, and it is cut to 80 characters.
+
+<a id="commands"></a>
+
+## Commands
+
+`open` reuses the map's server if it is already running, or starts one in the background, then opens the page.
+Inside a Tern pane it opens the page in a browser block beside that pane; anywhere else it opens the default browser (`open` on macOS, `xdg-open` elsewhere).
+
+The other commands:
+
+```
+session-map snapshot              # print the snapshot as JSON
+session-map snapshot --problems   # print only the texts of the sources that failed ("no problems" when none)
+session-map prototype --out map.html   # write the page with the snapshot of now embedded (default ./prototype.html)
+session-map serve                 # run the server in the foreground
+```
+
+Exit codes: 0 ok, 1 error, 2 bad arguments.
+No command prints a traceback.
+
+<a id="settings"></a>
+
+## Settings
+
+Settings, all optional:
+
+| Variable | What it does | Default |
+|---|---|---|
+| `SESSION_MAP_PORT` | the server's port | `9131` |
+| `SESSION_MAP_IDLE_S` | the server exits after this many seconds with no request for `/state` | `600` |
+| `SESSION_MAP_PAGE` | serve this HTML file instead of the packaged page | the packaged `page.html` |
+| `SESSION_MAP_ADAPTERS` | orchestrator adapters to load (see "Extension point") | none |
+| `SESSION_MAP_DONE_LINES` | turn markers that mean done (see "The color rule") | empty |
+| `SESSION_MAP_WAIT_MARKS` | turn markers that mean waiting (see "The color rule") | empty |
+| `SESSION_MAP_REGISTRY_DIR` | read the session registry from this folder | `~/.claude/sessions` |
+| `SESSION_MAP_PROJECTS_DIR` | read conversations from this folder | `~/.claude/projects` |
+| `SESSION_MAP_PS_JSON` | a JSON list of `ps` lines read instead of running `ps` (for tests) | none |
+| `SESSION_MAP_TERN_JSON` | a file read instead of running `tern ls --json` (for tests) | none |
+| `SESSION_MAP_STEPS_FILE` | the step file of the example Orca adapter (see "Adding Orca to your workflow") | none |
+
+`CLAUDE_CONFIG_DIR`, when set, replaces `~/.claude` as the base of the two default folders, as it does for Claude Code itself.
+
+<a id="color-rule"></a>
 
 ## The color rule
 
@@ -146,6 +200,8 @@ Both are empty by default.
 SESSION_MAP_DONE_LINES="All done.|Finished." SESSION_MAP_WAIT_MARKS="[needs you]" session-map snapshot
 ```
 
+<a id="snapshot"></a>
+
 ## The snapshot schema
 
 `session-map snapshot` prints the snapshot as JSON, and `GET /state` serves the same object.
@@ -190,6 +246,8 @@ A line:
 
 Both ends of every line are nodes of the same snapshot.
 The snapshot never holds a path, a UUID, a session id, a terminal handle or a `KEY=value` pair.
+
+<a id="orchestrators"></a>
 
 ## Extension point: orchestrators
 
@@ -283,7 +341,18 @@ SESSION_MAP_ADAPTERS=my_adapter.py:adapter session-map snapshot --problems
 `MY_MANAGER_SESSION_ID` is this example's own variable, not one the map reads.
 The `next` card appears only while that session is live.
 
+<a id="orca"></a>
+
 ## Adding Orca to your workflow
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/en/orca-narrow-dark.svg" />
+    <source media="(max-width: 600px)" srcset="assets/en/orca-narrow-light.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="assets/en/orca-dark.svg" />
+    <img src="assets/en/orca-light.svg" alt="The two layers of the example Orca adapter. Orca alone: two Orca tabs, through the adapter's handle variable ORCA_TERMINAL_HANDLE and its focus, become two cards with their Orca titles that bring their tab to the front on a click. With a step file: steps.json with pending, running and done steps gives a working card, a done card and a dashed next card joined by a follows line. The names and handles are invented." width="100%" />
+  </picture>
+</p>
 
 Each piece Orca or your orchestrator can give the map, and where it plugs in here:
 
@@ -309,6 +378,8 @@ From the repository folder:
 ```
 SESSION_MAP_ADAPTERS=examples/orca_adapter.py:adapter session-map open
 ```
+
+<a id="tern"></a>
 
 ## Embedding in a Tern plugin
 
@@ -347,7 +418,20 @@ Behaviour and safety:
 - A Tern pane is tied to its session only through the registry pid and `TERN_PANE`.
 - The tests replace `ps`, `tern` and `orca` with fixtures and fakes; Linux is not tested.
 
-## Tests
+<a id="requirements"></a>
+
+## Requirements
+
+| Requirement | What works |
+|---|---|
+| Python | Python 3.9 or newer, no dependencies. |
+| macOS | macOS is the tested platform. |
+| Linux | Linux is likely to work (`ps eww` exists there, and `xdg-open` replaces `open`) but is not tested. |
+| Windows | Windows is not supported: the map finds a session's Tern pane by reading the process environment with `ps eww`, and the standard library has no Windows equivalent. |
+| Tern | Tern is optional; without it the map still shows every session, as "other terminal". |
+
+<details>
+<summary><strong>Run the tests</strong></summary>
 
 ```
 python3 -m unittest discover -s tests
@@ -355,10 +439,14 @@ python3 -m unittest discover -s tests
 
 The page's layout tests need Node; without it they are skipped.
 
-## License
-
-MIT; see `LICENSE` and `NOTICE.md`.
+</details>
 
 ## Credits
 
 Designed and first built by Felipe Vieira Domingues Carneiro (github.com/felipevdc1) for his own setup; this repository is the standalone, open-source port.
+
+## License
+
+MIT; see `LICENSE` and `NOTICE.md`.
+
+Made by Felipe Carneiro: GitHub [felipevdc1](https://github.com/felipevdc1) · Instagram [@o.felipecarneiro](https://instagram.com/o.felipecarneiro).
