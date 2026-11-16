@@ -16,9 +16,8 @@ from pathlib import Path
 from tests.test_structure import PACKAGE, check_python
 
 SOURCES = PACKAGE / "sources"
-# The pin. Task 2.1 (the Codex source) adds "codex.py" here in the same change that creates the file, so the
-# list is always exactly what ships; a file added without this edit turns test_every_module_is_pinned red.
-MODULES = ("__init__.py",)
+# The pin: exactly what ships; a file added without this edit turns test_every_module_is_pinned red.
+MODULES = ("__init__.py", "codex.py")
 
 _BAD = ('import subprocess\nimport urllib.request\n'
         'def f():\n    subprocess.run(["lsof", "-p", "1"])\n')

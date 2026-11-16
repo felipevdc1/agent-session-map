@@ -169,6 +169,20 @@ body {
   background: var(--text-2);
   box-shadow: 0 0 0 2px var(--card-head);
 }
+.agent {
+  display: inline-block;
+  margin-right: 7px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  vertical-align: 1px;
+}
 
 .node:hover .frame { filter: brightness(1.15); }
 .node:focus-visible .frame, .node.selected .frame {
@@ -467,8 +481,10 @@ if (typeof module !== "undefined" && module.exports) { module.exports = MapLayou
     background: "in the background",
     other: "other terminal",
     helper: "helper",
-    next: "next step"
+    next: "next step",
+    app: "Codex app"
   };
+  var AGENTS = { codex: "Codex" };
   var LINKS = { opened: "opened this tab", called: "called this helper", follows: "comes before this step" };
 
   var mapEl = document.getElementById("map");
@@ -538,11 +554,15 @@ if (typeof module !== "undefined" && module.exports) { module.exports = MapLayou
 
   function fillCard(c, node) {
     c.className = "node " + MapLayout.stateClass(node.state) + (c.dataset.fresh ? " new" : "") + (selected === node.id ? " selected" : "");
-    c.setAttribute("aria-label", node.title + ", " + stateInWords(node));
+    var agent = node.agent ? AGENTS[node.agent] || String(node.agent) : "";
+    c.setAttribute("aria-label", (agent ? agent + " session " : "") + node.title + ", " + stateInWords(node));
     c.textContent = "";
     var frame = el("div", "frame");
     var inner = el("div", "inner");
-    inner.appendChild(el("div", "head", node.title || "(untitled)"));
+    var head = el("div", "head");
+    if (agent) head.appendChild(el("span", "agent", agent));
+    head.appendChild(document.createTextNode(node.title || "(untitled)"));
+    inner.appendChild(head);
     var meta = el("div", "meta");
     meta.appendChild(el("span", "where", node.where || ""));
     var t = node.state === "next" ? "not open yet" : ago(node.since);
@@ -550,9 +570,9 @@ if (typeof module !== "undefined" && module.exports) { module.exports = MapLayou
     inner.appendChild(meta);
     frame.appendChild(inner);
     c.appendChild(frame);
-    if (node.guessed) {
+    if (node.guessed || node.inferred) {
       var s = el("span", "badge");
-      s.title = "color guessed from the last sentence";
+      s.title = node.inferred ? "color inferred: Codex does not write this wait to disk" : "color guessed from the last sentence";
       c.appendChild(s);
     }
   }
@@ -690,6 +710,9 @@ if (typeof module !== "undefined" && module.exports) { module.exports = MapLayou
     }
     panel.appendChild(dl);
     if (node.guessed) panel.appendChild(el("p", "note", "Color guessed from the last sentence: no sure signal gave the state, so the color comes from how the last message ends. Trust it a little less."));
+    if (node.inferred) panel.appendChild(el("p", "note", node.waiting_for === "question or form"
+      ? "Waiting on your answer, inferred: Codex asked you a question and the turn has not moved since. Codex does not write whether a question was answered, so trust this a little less."
+      : "Waiting on a permission, inferred: a command that needs your approval has no result yet. Codex does not write approval requests to disk, so trust this a little less."));
     if (focusReply && focusReply.id === id) panel.appendChild(el("p", "note", focusReply.text));
     if (canFocus(node)) {
       var go = el("button", "button", "go to session");

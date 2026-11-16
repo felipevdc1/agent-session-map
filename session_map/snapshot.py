@@ -762,6 +762,8 @@ def forget() -> None:
         _PANES.clear()
         _MATCHED.clear()
         _ADAPTERS.update(env=None, adapters=[], problems=[])
+        from .sources import codex  # here, not at the top: the sources import this module
+        codex.forget()
 
 
 # ---------------------------------------------------------------- titles

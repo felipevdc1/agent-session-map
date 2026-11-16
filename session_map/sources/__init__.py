@@ -77,14 +77,6 @@ def selected(problems: list) -> list:
     names = _names(problems)
     out: list = [snapshot.ClaudeCode()]
     if "codex" in names:
-        # Temporary until Checkpoint 2 writes sources/codex.py: while the module is absent, Codex is skipped
-        # silently, so the map reads Claude Code only, byte-identical to the map before the seam.
-        try:
-            from . import codex
-        except ImportError as exc:
-            if exc.name not in (f"{__name__}.codex", __name__):  # only the missing module itself is skipped
-                raise
-            codex = None
-        if codex is not None:
-            out.append(codex.Codex())
+        from . import codex
+        out.append(codex.Codex())
     return out
