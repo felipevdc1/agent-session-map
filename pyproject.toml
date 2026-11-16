@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claude-session-map"
 version = "0.1.0"
-description = "A live map of the Claude Code sessions on this machine: cards, lines and one color rule."
+description = "A live map of the AI coding agent sessions on this machine: Claude Code and Codex, cards, lines and one color rule."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
@@ -15,7 +15,7 @@ dependencies = []
 session-map = "session_map.cli:main"
 
 [tool.setuptools]
-packages = ["session_map"]
+packages = ["session_map", "session_map.sources"]
 
 [tool.setuptools.package-data]
 session_map = ["page.html"]

@@ -1,6 +1,11 @@
 """The snapshot of the live session map: nodes and lines, read from disk, never from a model.
 
-Sources, each read on its own (one that fails adds a line to `problems` and the rest still comes out):
+The map is built from session sources (`sources/__init__.py`, chosen by `SESSION_MAP_SOURCES`). Claude Code is
+the first one: its reader is this module (`ClaudeCode`, `_claude_part`), read first and never wrapped, so an
+error there stops the snapshot as it always did. Every other source (Codex) runs inside `_safe`, its nodes and
+lines after Claude's.
+
+Claude Code's sources, each read on its own (one that fails adds a line to `problems` and the rest still comes out):
 - the session registry Claude Code keeps, `~/.claude/sessions/<pid>.json` (`SESSION_MAP_REGISTRY_DIR`),
   a session is live when its process answers `os.kill(pid, 0)`;
 - one `ps eww` over the live pids (`SESSION_MAP_PS_JSON`: a JSON list of `ps` lines, for tests); only the
@@ -546,18 +551,25 @@ def session_state(node, registry, step, tail, config: Optional[Config] = None) -
             if _num(changed) and now - changed > STUCK_S:
                 return {"state": "stopped", "stuck": True}
             return _working(changed)
-        text = tail.get("text")
-        if text is None:
-            return {"state": "stopped"}
-        lines = [x.strip() for x in text.splitlines() if x.strip()]
-        if lines and lines[-1].strip("*_ ") in set(config.done_lines):
-            return {"state": "done"}
-        if any(m in text for m in config.wait_marks if m):
-            return {"state": "waiting"}
-        if any(_question_line(x) for x in lines[-3:]):
-            return {"state": "waiting", "guessed": True}
-        return {"state": "done"}
+        return turn_end_state(tail.get("text"), config)
     return {"state": "stopped"}  # 6
+
+
+def turn_end_state(text, config: Optional[Config] = None) -> dict:
+    """The end of rule 5, shared by every source: the state of a turn that ended with `text` (its last
+    assistant text, or None). No text -> stopped; a last line among `done_lines` -> done; any `wait_marks` ->
+    waiting; a question in the last three lines -> waiting and guessed; else done."""
+    config = config or Config()
+    if text is None:
+        return {"state": "stopped"}
+    lines = [x.strip() for x in text.splitlines() if x.strip()]
+    if lines and lines[-1].strip("*_ ") in set(config.done_lines):
+        return {"state": "done"}
+    if any(m in text for m in config.wait_marks if m):
+        return {"state": "waiting"}
+    if any(_question_line(x) for x in lines[-3:]):
+        return {"state": "waiting", "guessed": True}
+    return {"state": "done"}
 
 
 # ---------------------------------------------------------------- the cache
@@ -788,13 +800,17 @@ def _with_version(generated_at, nodes, lines, problems_n, hidden_n, unknown_form
     return {"version": version, "generated_at": generated_at, **body}
 
 
+KEEP_PREFIXES = ("p:", "a:", "x:")  # node ids merge_closed keeps as closed: Claude sessions, helpers, Codex sessions
+_DROPPED_WHEN_KEPT = ("pane", "waiting_for", "guessed", "inferred")  # fields a closed kept node no longer carries
+
+
 def merge_closed(previous, current: dict, now: float, memory: Optional[dict] = None, hidden=None) -> dict:
-    """Rule 1 for the server: `current` plus the session (`p:`) and helper (`a:`) nodes of `previous` that
+    """Rule 1 for the server: `current` plus the session (`p:`, `x:`) and helper (`a:`) nodes of `previous` that
     vanished, shown as `closed` for GONE_S since they vanished, then gone; `version` recomputed.
     `previous` is the previous result of this function (or None), `now` an epoch in seconds.
     - `memory` ({id: epoch it vanished}, kept between calls; default: this module's) holds the clock; a kept
-      node's `since` is the vanishing time, its `pane`, `waiting_for` and `guessed` are dropped. A node that
-      comes back is the live one again.
+      node's `since` is the vanishing time, its `pane`, `waiting_for`, `guessed` and `inferred` are dropped.
+      A node that comes back is the live one again.
     - `hidden` (default: the ids the last snapshot of this process left out by the age cut) never turn into
       `closed`: they are alive, only hidden.
     - Left to their own rule, never kept: `next` nodes, a helper that was `done`, and a node that was already
@@ -806,14 +822,14 @@ def merge_closed(previous, current: dict, now: float, memory: Optional[dict] = N
     kept = []
     for n in (previous or {}).get("nodes") or []:
         i = n.get("id")
-        if not isinstance(i, str) or i in ids or i in hidden or not i.startswith(("p:", "a:")):
+        if not isinstance(i, str) or i in ids or i in hidden or not i.startswith(KEEP_PREFIXES):
             continue
         if i not in memory and (n.get("state") == "closed" or (i.startswith("a:") and n.get("state") == "done")):
             continue
         since = memory.setdefault(i, now)
         if now - since >= GONE_S:
             continue
-        new = {k: v for k, v in n.items() if k not in ("pane", "waiting_for", "guessed")}
+        new = {k: v for k, v in n.items() if k not in _DROPPED_WHEN_KEPT}
         new.update(state="closed", since=_iso(since))
         kept.append(new)
     alive = {n["id"] for n in kept}
@@ -917,12 +933,67 @@ def _match_steps(adapters, sessions, by_sid, by_handle, problems, lines) -> list
     return next_nodes
 
 
+def _tabs_once(problems: list):
+    """A reader of the Tern tabs that runs `tern ls` at most once per join, at its first call (the Claude part
+    and every other source call it only when one of their processes has a pane)."""
+    memo: list = []
+
+    def read() -> dict:
+        if not memo:
+            memo.append(_safe("Tern tabs", problems, tern.read_tabs, {}, problems))
+        return memo[0]
+    return read
+
+
+class ClaudeCode:
+    """The first session source: Claude Code's registry, conversations and helpers (`_claude_part`)."""
+    name = "Claude Code"
+
+    def read(self, ctx):
+        from .sources import SourceResult
+        hidden: set = set()
+        signals: dict = {}
+        nodes, lines, hidden_n = _claude_part(ctx.now, hidden, ctx.problems, signals, ctx.config, ctx.tabs)
+        return SourceResult(nodes=nodes, lines=lines, hidden_n=hidden_n, hidden=hidden,
+                            unknown_format=bool(signals.get("unknown_format")))
+
+
 def _join_unlocked(now, hidden: set) -> tuple:
-    global _IN_USE
+    from . import sources
     now = time.time() if now is None else now
     problems: list = []
-    signals: dict = {}
-    config = read_config()
+    ctx = sources.Context(now=now, config=read_config(), problems=problems, tabs=_tabs_once(problems))
+    nodes: list = []
+    lines: list = []
+    hidden_n, unknown_format = 0, False
+    for src in sources.selected(problems):
+        if isinstance(src, ClaudeCode):
+            r = src.read(ctx)  # never wrapped: an error here stops the snapshot, as before the seam
+        else:
+            r = _safe(f"source {src.name}", problems, src.read, None, ctx)
+            if not isinstance(r, sources.SourceResult):
+                continue
+        nodes += r.nodes
+        lines += r.lines
+        hidden_n += r.hidden_n
+        hidden.update(r.hidden)
+        unknown_format = unknown_format or r.unknown_format
+    problems[:] = [_DISK_RE.sub("…", p) for p in problems]  # problems never show a disk path
+    ids = {n["id"] for n in nodes}
+    kept, seen = [], set()
+    for ln in lines:
+        key = (ln["from"], ln["to"], ln["kind"])
+        if ln["from"] in ids and ln["to"] in ids and ln["from"] != ln["to"] and key not in seen:
+            seen.add(key)
+            kept.append(ln)
+    generated_at = dt.datetime.fromtimestamp(now).astimezone().isoformat(timespec="seconds")
+    return _with_version(generated_at, nodes, kept, len(problems), hidden_n, unknown_format), problems
+
+
+def _claude_part(now, hidden: set, problems: list, signals: dict, config: Config, tabs_reader) -> tuple:
+    """Claude Code's nodes and lines: (nodes, lines, hidden_n), session nodes (each followed by its helpers)
+    then `next` nodes; lines are the steps' lines, then the `called` lines. Fills `hidden` and `signals`."""
+    global _IN_USE
     sessions = _safe("session registry", problems, read_registry, [], problems, signals)
     adapters = _safe("adapters", problems, _adapters, [], problems)
     try:
@@ -933,8 +1004,7 @@ def _join_unlocked(now, hidden: set) -> tuple:
         _use_adapters(adapters)
     ident = {s["pid"]: s["startedAt"] for s in sessions}
     env = _safe("ps", problems, _env, {}, ident, problems)
-    tabs = _safe("Tern tabs", problems, tern.read_tabs, {}, problems) if any(
-        v[0] is not None for v in env.values()) else {}
+    tabs = tabs_reader() if any(v[0] is not None for v in env.values()) else {}
 
     by_sid, by_handle = {}, {}
     for s in sessions:
@@ -1017,18 +1087,7 @@ def _join_unlocked(now, hidden: set) -> tuple:
     _IN_USE = list(adapters)
     _MATCHED.clear()
     _MATCHED.update({s["pid"]: s["match"] for s in sessions if s["match"] is not None})
-    problems[:] = [_DISK_RE.sub("…", p) for p in problems]  # problems never show a disk path
-    nodes = session_nodes + next_nodes
-    ids = {n["id"] for n in nodes}
-    kept, seen = [], set()
-    for ln in lines:
-        key = (ln["from"], ln["to"], ln["kind"])
-        if ln["from"] in ids and ln["to"] in ids and ln["from"] != ln["to"] and key not in seen:
-            seen.add(key)
-            kept.append(ln)
-    generated_at = dt.datetime.fromtimestamp(now).astimezone().isoformat(timespec="seconds")
-    return _with_version(generated_at, nodes, kept, len(problems), hidden_n,
-                         bool(signals.get("unknown_format"))), problems
+    return session_nodes + next_nodes, lines, hidden_n
 
 
 def snapshot(problems: Optional[list] = None) -> dict:
